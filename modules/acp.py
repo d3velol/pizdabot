@@ -3,7 +3,7 @@ import json
 from pyrogram import filters
 from pyrogram.types import Message
 
-MODULES_PATH = 'data'
+MODULES_PATH = 'modules'
 BACKUP_FILE = os.path.join(MODULES_PATH, 'backup.json')
 
 def register(client, bot):
@@ -21,11 +21,12 @@ def register(client, bot):
                     "last_name": me.last_name
                 }
 
-                # Сохранение аватарки
+                # Сохранение текущей аватарки
                 async for photo in client.get_chat_photos("me", limit=1):
                     file_path = os.path.join(MODULES_PATH, 'backup_avatar.jpg')
                     await client.download_media(photo.file_id, file_path)
                     backup_data["avatar"] = file_path
+                    break  # Останавливаемся после первой (текущей) аватарки
 
                 with open(BACKUP_FILE, 'w') as f:
                     json.dump(backup_data, f)
@@ -76,7 +77,7 @@ def register(client, bot):
 
                 await message.edit_text("🔄 Копирование данных пользователя...")
 
-                # Сохранение аватарки
+                # Сохранение текущей аватарки пользователя
                 async for photo in client.get_chat_photos(target_user.id, limit=1):
                     file_path = os.path.join(MODULES_PATH, 'temp_avatar.jpg')
                     await client.download_media(photo.file_id, file_path)
@@ -86,6 +87,7 @@ def register(client, bot):
 
                     # Удаление временного файла
                     os.remove(file_path)
+                    break  # Останавливаемся после первой (текущей) аватарки
 
                 # Обновление имени и фамилии
                 await client.update_profile(
