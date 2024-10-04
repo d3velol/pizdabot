@@ -3,6 +3,7 @@ import importlib
 import requests
 from pyrogram import filters
 from pyrogram.types import Message
+import base64
 
 MODULES_PATH = 'modules'
 GITHUB_REPO = 'https://api.github.com/repos/d3velol/pizdarepo/contents/modules'
@@ -41,14 +42,13 @@ async def install_module(message: Message, module_name: str):
         response = requests.get(f"{GITHUB_REPO}/{module_name}.py")
         if response.status_code == 200:
             file_info = response.json()
-            download_url = file_info.get('download_url')
-            if download_url:
-                file_content = requests.get(download_url).text
+            if 'content' in file_info and file_info['encoding'] == 'base64':
+                file_content = base64.b64decode(file_info['content']).decode('utf-8')
                 with open(os.path.join(MODULES_PATH, f"{module_name}.py"), 'w') as f:
                     f.write(file_content)
                 await message.edit_text(f"✅ Модуль `{module_name}` успешно установлен.")
             else:
-                await message.edit_text(f"❌ Не удалось получить URL для скачивания модуля `{module_name}`.")
+                await message.edit_text(f"❌ Не удалось получить содержимое модуля `{module_name}`.")
         else:
             await message.edit_text(f"❌ Модуль `{module_name}` не найден в репозитории.")
     except Exception as e:
