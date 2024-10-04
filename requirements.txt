@@ -1,0 +1,4 @@
+tgcrypto
+pyrofork
+loguru
+colorama
