@@ -35,14 +35,20 @@ def register(client, bot):
 async def list_modules(message: Message):
     modules = [f[:-3] for f in os.listdir(MODULES_PATH) if f.endswith('.py') and not f.startswith('__')]
     await message.edit_text(f"📦 Установленные модули: {', '.join(modules)}")
-
+    
 async def install_module(message: Message, module_name: str):
     try:
         response = requests.get(f"{GITHUB_REPO}/{module_name}.py")
         if response.status_code == 200:
-            with open(os.path.join(MODULES_PATH, f"{module_name}.py"), 'w') as f:
-                f.write(response.text)
-            await message.edit_text(f"✅ Модуль `{module_name}` успешно установлен.")
+            file_info = response.json()
+            download_url = file_info.get('download_url')
+            if download_url:
+                file_content = requests.get(download_url).text
+                with open(os.path.join(MODULES_PATH, f"{module_name}.py"), 'w') as f:
+                    f.write(file_content)
+                await message.edit_text(f"✅ Модуль `{module_name}` успешно установлен.")
+            else:
+                await message.edit_text(f"❌ Не удалось получить URL для скачивания модуля `{module_name}`.")
         else:
             await message.edit_text(f"❌ Модуль `{module_name}` не найден в репозитории.")
     except Exception as e:
